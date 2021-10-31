@@ -1,6 +1,7 @@
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite/sqlite_api.dart';
+import 'package:todos/models/todo.model.dart';
 
 class DatabaseService {
   static const DatabaseService instance = DatabaseService._();
@@ -37,5 +38,29 @@ class DatabaseService {
         ''');
     });
     return todoListDB;
+  }
+
+  Future<Todo> insert(Todo todo) async {
+    final db = await this.db;
+    final id = await db.insert(_todoTable, todo.toMap());
+    final todoWithId = todo.copyWith(id: id);
+    return todoWithId;
+  }
+
+  Future<List<Todo>> getAllTodos() async {
+    final db = await this.db;
+    final todosData = await db.query(_todoTable, orderBy: '$_colDate DESC');
+    return todosData.map((e) => Todo.fromMap(e)).toList();
+  }
+
+  Future<int> update(Todo todo) async {
+    final db = await this.db;
+    return await db.update(_todoTable, todo.toMap(),
+        where: '$_colId = ?', whereArgs: [todo.id]);
+  }
+
+  Future<int> delete(int id) async {
+    final db = await this.db;
+    return await db.delete(_todoTable, where: '$_colId = ?', whereArgs: [id]);
   }
 }
