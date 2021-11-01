@@ -7,8 +7,9 @@ import 'package:todos/services/database.service.dart';
 
 class AddTodoScreen extends StatefulWidget {
   final VoidCallback updateTodos;
+  final Todo? todo;
 
-  const AddTodoScreen({required this.updateTodos});
+  const AddTodoScreen({required this.updateTodos, this.todo});
 
   @override
   _AddTodoScreenState createState() => _AddTodoScreenState();
@@ -22,15 +23,22 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
 
   Todo? _todo;
 
+  bool get _isEditing => widget.todo != null;
+
   @override
   void initState() {
     super.initState();
-    _todo = Todo(
-      name: '',
-      priorityLevel: PriorityLevel.medium,
-      completed: false,
-      date: DateTime.now(),
-    );
+
+    if (_isEditing) {
+      _todo = widget.todo;
+    } else {
+      _todo = Todo(
+        name: '',
+        priorityLevel: PriorityLevel.medium,
+        completed: false,
+        date: DateTime.now(),
+      );
+    }
 
     _nameController = TextEditingController(text: _todo!.name);
     _dateController =
@@ -49,7 +57,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add todo'),
+        title: Text(!_isEditing ? 'Add todo' : 'Update Todo'),
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
@@ -100,9 +108,36 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                 ),
                 SizedBox(height: 32.0),
                 ElevatedButton(
-                    onPressed: _submit,
+                  onPressed: _submit,
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(
+                        !_isEditing ? Colors.green : Colors.orange),
+                    minimumSize: MaterialStateProperty.all(
+                      Size.fromHeight(45.0),
+                    ),
+                    shape: MaterialStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    !_isEditing ? 'Add' : 'Save',
+                    style: TextStyle(fontSize: 16.0, color: Colors.white),
+                  ),
+                ),
+                SizedBox(
+                  height: 20.0,
+                ),
+                if (_isEditing)
+                  ElevatedButton(
+                    onPressed: () {
+                      DatabaseService.instance.delete(_todo!.id!);
+                      widget.updateTodos();
+                      Navigator.pop(context);
+                    },
                     style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.green),
+                      backgroundColor: MaterialStateProperty.all(Colors.red),
                       minimumSize: MaterialStateProperty.all(
                         Size.fromHeight(45.0),
                       ),
@@ -113,9 +148,10 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                       ),
                     ),
                     child: Text(
-                      'Add',
+                      'Delete',
                       style: TextStyle(fontSize: 16.0, color: Colors.white),
-                    ))
+                    ),
+                  )
               ],
             ),
           ),
@@ -143,8 +179,11 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   void _submit() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
-      DatabaseService.instance.insert(_todo!);
+      if (!_isEditing) {
+        DatabaseService.instance.insert(_todo!);
+      } else {
+        DatabaseService.instance.update(_todo!);
+      }
 
       widget.updateTodos();
 
