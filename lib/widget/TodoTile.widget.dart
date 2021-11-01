@@ -6,16 +6,20 @@ import 'package:todos/models/todo.model.dart';
 import 'package:todos/services/database.service.dart';
 
 class TodoTile extends StatelessWidget {
+  final VoidCallback updateTodos;
+
   final Todo todo;
   const TodoTile({
     Key? key,
     required this.todo,
+    required this.updateTodos,
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
     final completedTextDecoration =
         !todo.completed ? TextDecoration.none : TextDecoration.lineThrough;
     return ListTile(
+      key: Key(todo.id.toString()),
       title: Text(
         todo.name,
         style: TextStyle(
@@ -32,6 +36,7 @@ class TodoTile extends StatelessWidget {
             ),
           ),
           Container(
+            margin: EdgeInsets.only(left: 10.0),
             padding: EdgeInsets.symmetric(
               vertical: 2.5,
               horizontal: 8.0,
@@ -64,6 +69,7 @@ class TodoTile extends StatelessWidget {
         activeColor: _getColor(),
         onChanged: (value) {
           DatabaseService.instance.update(todo.copyWith(completed: value));
+          updateTodos();
         },
       ),
     );
