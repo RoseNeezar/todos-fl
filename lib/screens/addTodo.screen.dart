@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:todos/models/todo.model.dart';
 import 'package:todos/extensions/stringCapitalize.dart';
+import 'package:todos/services/database.service.dart';
 
 class AddTodoScreen extends StatefulWidget {
+  final VoidCallback updateTodos;
+
+  const AddTodoScreen({required this.updateTodos});
+
   @override
   _AddTodoScreenState createState() => _AddTodoScreenState();
 }
@@ -33,6 +38,14 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    _nameController.dispose();
+    _dateController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -41,7 +54,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
           child: Form(
             key: _formKey,
             child: Column(
@@ -87,7 +100,7 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                 ),
                 SizedBox(height: 32.0),
                 ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _submit,
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(Colors.green),
                       minimumSize: MaterialStateProperty.all(
@@ -111,5 +124,31 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
     );
   }
 
-  void _handleDatePicker() {}
+  Future<void> _handleDatePicker() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _todo!.date,
+      firstDate: DateTime.now().subtract(Duration(days: 365)),
+      lastDate: DateTime.now().add(Duration(days: 365)),
+    );
+
+    if (date != null) {
+      _dateController.text = DateFormat.MMMMEEEEd().format(date);
+      setState(() {
+        _todo = _todo!.copyWith(date: date);
+      });
+    }
+  }
+
+  void _submit() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      DatabaseService.instance.insert(_todo!);
+
+      widget.updateTodos();
+
+      Navigator.of(context).pop();
+    }
+  }
 }

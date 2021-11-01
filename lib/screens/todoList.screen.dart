@@ -16,6 +16,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
   @override
   void initState() {
     super.initState();
+    _getTodos();
   }
 
   Future<void> _getTodos() async {
@@ -35,8 +36,11 @@ class _TodoListScreenState extends State<TodoListScreen> {
           separatorBuilder: (_, __) => const Divider(),
           itemBuilder: (BuildContext context, int index) {
             if (index == 0) return TodosOverview(todos: _todos);
-            final todo = _todos[index];
-            return TodoTile(todo: todo);
+            final todo = _todos[index - 1];
+            return TodoTile(
+              todo: todo,
+              updateTodos: _getTodos,
+            );
           },
         ),
       ),
@@ -45,7 +49,9 @@ class _TodoListScreenState extends State<TodoListScreen> {
           context,
           MaterialPageRoute(
             fullscreenDialog: true,
-            builder: (_) => AddTodoScreen(),
+            builder: (_) => AddTodoScreen(
+              updateTodos: _getTodos,
+            ),
           ),
         ),
         child: Icon(Icons.add),

@@ -46,7 +46,7 @@ class Todo {
         id: map['id'] as int,
         name: map['name'] as String,
         priorityLevel: EnumToString.fromString(
-            PriorityLevel.values, map['priorityLevel'] as String)!,
+            PriorityLevel.values, map['priority_level'] as String)!,
         completed: map['completed'] as int == 1,
         date: DateTime.parse(map['date'] as String));
   }
