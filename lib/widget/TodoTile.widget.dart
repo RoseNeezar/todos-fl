@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:todos/extensions/stringCapitalize.dart';
 import 'package:todos/models/todo.model.dart';
+import 'package:todos/screens/addTodo.screen.dart';
 import 'package:todos/services/database.service.dart';
 
 class TodoTile extends StatelessWidget {
@@ -71,6 +72,16 @@ class TodoTile extends StatelessWidget {
           DatabaseService.instance.update(todo.copyWith(completed: value));
           updateTodos();
         },
+      ),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => AddTodoScreen(
+            updateTodos: updateTodos,
+            todo: todo,
+          ),
+        ),
       ),
     );
   }
